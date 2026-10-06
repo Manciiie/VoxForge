@@ -1,0 +1,115 @@
+{
+  "name": "voxforge",
+  "version": "1.7.0",
+  "description": "Transcription audio vers texte, 99 langues, 100 % locale (Whisper)",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "securite": "node scripts/scan-securite.js",
+    "build": "node scripts/configurer-maj.js && node scripts/fetch-win-natives.js && electron-builder --win nsis --x64 --publish never",
+    "build:linux": "node scripts/configurer-maj.js && electron-builder --linux dir --publish never",
+    "dist": "npm run build",
+    "publier": "node scripts/publier.js"
+  },
+  "author": "Thomas",
+  "license": "MIT",
+  "dependencies": {
+    "docx": "^9.8.1",
+    "node-llama-cpp": "^3.22.1",
+    "pdfjs-dist": "^4.10.38",
+    "sherpa-onnx-node": "^1.13.8",
+    "tar-stream": "^3.2.2",
+    "unbzip2-stream": "^1.4.3",
+    "electron-updater": "^6.8.0"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "undici": "^8.11.2",
+    "@electron/fuses": "^2.1.0"
+  },
+  "productName": "VoxForge",
+  "build": {
+    "appId": "com.voxforge.app",
+    "productName": "VoxForge",
+    "asar": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "CHANGELOG.md",
+      "node_modules/**/*",
+      "!node_modules/undici/**",
+      "!node_modules/sherpa-onnx-linux-*/**",
+      "!node_modules/sherpa-onnx-darwin-*/**",
+      "!node_modules/@node-llama-cpp/linux-*/**",
+      "!node_modules/@node-llama-cpp/mac-*/**",
+      "!node_modules/@node-llama-cpp/win-arm64/**",
+      "!node_modules/@node-llama-cpp/*cuda*/**",
+      "!node_modules/node-llama-cpp/llama/gitRelease.bundle",
+      "!node_modules/node-llama-cpp/llama/addon/**",
+      "!**/*.{md,map,ts}",
+      "!**/{test,tests,__tests__,docs,example,examples}/**",
+      "!node_modules/pdfjs-dist/{build,web,image_decoders,types}/**",
+      "!node_modules/pdfjs-dist/legacy/{web,image_decoders}/**",
+      "!node_modules/pdfjs-dist/**/*.min.mjs"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/silero_vad.onnx",
+        "to": "silero_vad.onnx"
+      },
+      {
+        "from": "resources/bin/ffmpeg.exe",
+        "to": "bin/ffmpeg.exe"
+      }
+    ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "VoxForge",
+      "artifactName": "VoxForge-Setup-${version}.${ext}",
+      "installerLanguages": [
+        "fr_FR"
+      ],
+      "language": "1036"
+    },
+    "portable": {
+      "artifactName": "VoxForge-Portable-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Manciiie",
+        "repo": "VoxForge-releases",
+        "private": true,
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": true
+    },
+    "afterPack": "scripts/fuses.js",
+    "linux": {
+      "target": [
+        "dir"
+      ],
+      "category": "AudioVideo"
+    }
+  },
+  "overrides": {
+    "simple-git": "^4.0.2",
+    "@simple-git/argv-parser": ">=2.0.1"
+  }
+}

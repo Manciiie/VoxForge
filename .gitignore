@@ -1,0 +1,9 @@
+node_modules/
+dist/
+livraison/
+*.log
+.electronegativity.csv
+captures*/
+src/main/maj-config.json
+dev-app-update.yml
+resources/bin/

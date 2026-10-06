@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; media-src 'self' file: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>VoxForge</title>
+  <script src="theme-boot.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- écran de chargement : visible dès le premier affichage, retiré quand l'interface est prête -->
+  <div id="splash" style="position:fixed;inset:0;z-index:9999;background:var(--bg,#0f1117);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font:600 15px 'Segoe UI',system-ui,sans-serif;color:#8b92a6;transition:opacity .25s">
+    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#7c5cff" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>
+    <span>VoxForge</span>
+  </div>
+  <header class="titlebar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs><rect x="1" y="1" width="30" height="30" rx="9" fill="url(#lg)"/><g fill="#fff"><rect x="7" y="13" width="2.6" height="6" rx="1.3"/><rect x="11.4" y="9" width="2.6" height="14" rx="1.3"/><rect x="15.8" y="6" width="2.6" height="20" rx="1.3"/><rect x="20.2" y="10.5" width="2.6" height="11" rx="1.3"/><rect x="24.6" y="14" width="2.6" height="4" rx="1.3"/></g></svg>
+      <span>VoxForge</span>
+      <small id="appVersion"></small>
+    </div>
+    <div class="titlebar-status" id="globalStatus"></div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <button class="nav-item active" data-view="transcribe"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/><path d="M17 14v6m-3-3h6"/></svg><span>Transcrire</span></button>
+      <button class="nav-item" data-view="live"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Dictée en direct</span></button>
+      <button class="nav-item" data-view="texts"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg><span>Textes</span></button>
+      <button class="nav-item" data-view="history"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span>Historique</span></button>
+      <button class="nav-item" data-view="projects"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M8 13h8M8 16h5"/></svg><span>Projets</span></button>
+      <button class="nav-item" data-view="qa"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3M12 16.5h.01"/></svg><span>Questions</span></button>
+      <button class="nav-item" data-view="models"><svg viewBox="0 0 24 24"><path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg><span>Modèles</span><i class="dot" id="modelsDot" hidden></i></button>
+      <div class="nav-spacer"></div>
+      <button class="nav-item" data-view="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span>Paramètres</span></button>
+      <div class="sidebar-foot" id="sidebarModel"></div>
+    </nav>
+
+    <main class="content">
+      <!-- ============ TRANSCRIRE ============ -->
+      <section class="view active" id="view-transcribe">
+        <div class="onboarding card" id="onboarding" hidden>
+          <div>
+            <h3>Bienvenue dans VoxForge 👋</h3>
+            <p>Pour transcrire, il faut d’abord télécharger un modèle de reconnaissance vocale (une seule fois). Tout fonctionne ensuite <b>hors ligne</b>, sur votre PC.</p>
+          </div>
+          <div class="onboarding-actions" id="onboardingActions">
+            <button class="btn primary" data-install="turbo">Installer « Large v3 Turbo » (recommandé · 1 Go)</button>
+            <button class="btn" data-install="parakeet">Le plus rapide : « Parakeet » (670 Mo · langues européennes)</button>
+          </div>
+        </div>
+
+        <div class="transcribe-grid">
+          <div class="left-col">
+            <div class="dropzone" id="dropzone" tabindex="0">
+              <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              <div><b>Glissez vos fichiers audio ou vidéo ici</b><br><span>fichiers ou dossiers · ou cliquez pour parcourir · MP3, WAV, M4A, FLAC, OGG, OPUS, MP4, MKV, MOV…</span></div>
+            </div>
+
+            <div class="options card">
+              <div class="opt-row">
+                <label>Modèle<select id="optModel"></select></label>
+                <label>Langue parlée<select id="optLang"></select></label>
+              </div>
+              <div class="opt-row">
+                <div class="segmented" id="optTask">
+                  <button data-task="transcribe" class="active">Transcrire</button>
+                  <button data-task="translate">Traduire → anglais</button>
+                </div>
+                <label class="opt-project">Projet<select id="optProject"><option value="">Aucun</option></select></label>
+                <label class="switch" title="Détecte la langue phrase par phrase (pour les enregistrements où l’on change de langue)"><input type="checkbox" id="optMulti"><i></i><span>Audio multilingue</span></label>
+              </div>
+            </div>
+
+            <div class="queue-head">
+              <h4>File d’attente <span class="count" id="queueCount">0</span></h4>
+              <div class="queue-actions">
+                <button class="btn ghost small" id="btnAddFolder" title="Ajouter tous les fichiers audio/vidéo d’un dossier">+ Dossier</button>
+                <button class="btn ghost small" id="btnClearDone" title="Retirer les fichiers terminés">Nettoyer</button>
+                <button class="btn primary small" id="btnStart"><svg viewBox="0 0 24 24"><path d="m7 4 13 8-13 8V4Z"/></svg>Lancer</button>
+              </div>
+            </div>
+            <ul class="queue" id="queue"><li class="empty">Aucun fichier pour l’instant.</li></ul>
+          </div>
+
+          <div class="right-col">
+            <div class="result card" id="result">
+              <div class="result-empty" id="resultEmpty">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg>
+                <p>La transcription apparaîtra ici, en temps réel.</p>
+              </div>
+              <div class="result-body" id="resultBody" hidden>
+                <div class="result-head">
+                  <div class="result-title">
+                    <input id="resTitle" class="title-input" spellcheck="false">
+                    <div class="meta" id="resMeta"></div>
+                    <div class="doc-org" id="docOrg"></div>
+                  </div>
+                  <div class="result-tools">
+                    <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="resSearch" placeholder="Rechercher…"><span id="resSearchCount"></span></div>
+                    <button class="btn small" id="btnCopy" title="Copier le texte"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copier</button>
+                    <div class="dropdown">
+                      <button class="btn small primary" id="btnExport"><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4M4 20h16"/></svg>Exporter</button>
+                      <div class="menu" id="exportMenu" hidden>
+                        <button data-fmt="txt">Texte brut (.txt)</button>
+                        <button data-fmt="txt-ts">Texte horodaté (.txt)</button>
+                        <button data-fmt="srt">Sous-titres (.srt)</button>
+                        <button data-fmt="vtt">Sous-titres web (.vtt)</button>
+                        <button data-fmt="md">Markdown (.md)</button>
+                        <button data-fmt="html">Page HTML (.html)</button>
+                        <button data-fmt="csv">Tableur (.csv)</button>
+                        <button data-fmt="srt-bi" id="fmtBi" hidden>Sous-titres bilingues (.srt)</button>
+                        <hr>
+                        <button data-fmt="docx">Document Word (.docx)</button>
+                        <button data-fmt="pdf">Document PDF (.pdf)</button>
+                        <button data-fmt="json">JSON (.json)</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress-wrap" id="progressWrap" hidden>
+                  <div class="progress"><i id="progressBar"></i></div>
+                  <div class="progress-info"><span id="progressText">Préparation…</span><button class="btn ghost small danger" id="btnCancel">Annuler</button></div>
+                </div>
+                <div class="player" id="player" hidden>
+                  <button class="play" id="btnPlay" title="Lecture/Pause (Ctrl+Espace)"><svg viewBox="0 0 24 24" id="playIcon"><path d="m7 4 13 8-13 8V4Z"/></svg></button>
+                  <span class="time" id="timeCur">0:00</span>
+                  <input type="range" id="seek" min="0" max="1000" value="0">
+                  <span class="time" id="timeDur">0:00</span>
+                  <select id="rate" title="Vitesse de lecture"><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option><option value="2">2×</option></select>
+                  <label class="switch mini" title="Suivre la lecture"><input type="checkbox" id="followPlay" checked><i></i><span>Suivre</span></label>
+                  <audio id="audio" preload="metadata"></audio>
+                </div>
+                <nav class="tabs" id="docTabs" role="tablist">
+                  <button data-tab="transcript" class="active" role="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg>Transcription</button>
+                  <button data-tab="translate" role="tab"><svg viewBox="0 0 24 24"><path d="M4 5h8M8 3v2m3 0c-1 4-3.5 7-7 9m2-5c1.5 2 3.5 3.5 6 4.5"/><path d="m13 21 4-10 4 10m-6.5-3.5h5"/></svg>Traduction<i class="tab-dot" id="trDot" hidden></i></button>
+                  <button data-tab="summary" role="tab"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15.5l-1.9-4.6L5.5 9l4.6-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Résumé<i class="tab-dot" id="sumDot" hidden></i></button>
+                  <button data-tab="transform" role="tab"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>Transformer<i class="tab-dot" id="tfDot" hidden></i></button>
+                  <button data-tab="subs" role="tab"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 13h4m2 0h4M7 16h7"/></svg>Sous-titres</button>
+                  <button data-tab="stats" role="tab"><svg viewBox="0 0 24 24"><path d="M4 20V10m6 10V4m6 16v-7m4 7H3"/></svg>Statistiques</button>
+                  <button data-tab="origin" role="tab" title="Ce texte a-t-il été écrit par une personne ou par une IA ?"><svg viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 1 4 4v1a4 4 0 0 1 3 4v1a4 4 0 0 1-3 4v1a4 4 0 0 1-8 0v-1a4 4 0 0 1-3-4v-1a4 4 0 0 1 3-4V7a4 4 0 0 1 4-4Z"/><path d="M12 3v18M9 9h6M9 15h6"/></svg>Origine IA</button>
+                </nav>
+
+                <div class="tab-pane active" data-pane="transcript">
+                  <div class="tr-toolbar">
+                    <div class="view-toggle segmented small" id="resView">
+                      <button data-v="segments" class="active">Segments</button>
+                      <button data-v="text">Texte continu</button>
+                    </div>
+                    <div class="dropdown" id="planWrap" hidden><button class="btn small" id="btnPlan" title="Plan du cours repéré automatiquement (Paragraphe 1, A, B, C…)"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Plan</button>
+                      <div class="menu plan-menu" id="planMenu" hidden></div></div>
+                    <span class="spacer"></span>
+                    <button class="btn small" id="btnCleanup" title="Retirer les hésitations, corriger les erreurs et la ponctuation"><svg viewBox="0 0 24 24"><path d="m14 4 6 6M4 20l9.5-9.5M17 3l4 4-3 3-4-4z"/><path d="M5 6v4M3 8h4M9 3v2M8 4h2"/></svg>Nettoyer le texte</button>
+                    <button class="btn small" id="btnApplyDict" title="Appliquer le dictionnaire personnalisé à cette transcription"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z"/><path d="M4 19a2 2 0 0 1 2-2h13"/></svg>Dictionnaire</button>
+                    <button class="btn ghost small" id="btnUndoClean" hidden title="Revenir au texte d’avant le nettoyage">↶ Annuler le nettoyage</button>
+                  </div>
+                  <div class="cleanup" id="cleanupPanel" hidden>
+                    <div class="cleanup-head">
+                      <div class="segmented small" id="clMode"><button data-v="quick" class="active">Rapide (sans IA)</button><button data-v="ai">Avec l’IA</button></div>
+                      <label class="switch mini"><input type="checkbox" id="clFillers" checked><i></i><span>Hésitations & répétitions</span></label>
+                      <label class="switch mini" data-clai><input type="checkbox" id="clFix" checked><i></i><span>Erreurs de reconnaissance</span></label>
+                      <label class="switch mini" data-clai><input type="checkbox" id="clPunct" checked><i></i><span>Ponctuation & majuscules</span></label>
+                      <span class="spacer"></span>
+                      <button class="btn primary small" id="clRun">Analyser</button>
+                      <button class="btn ghost small" id="clClose">Fermer</button>
+                    </div>
+                    <div class="ai-progress" id="clProgress" hidden><div class="progress"><i></i></div><div class="progress-info"><span class="txt"></span><button class="btn ghost small danger" data-ai-cancel="cleanup">Annuler</button></div></div>
+                    <div class="cleanup-sum" id="clSummary" hidden></div>
+                  </div>
+                  <div class="diff-list" id="diffList" hidden></div>
+                  <div class="segments" id="segments"></div>
+                  <div class="plaintext" id="plaintext" hidden></div>
+                </div>
+
+                <div class="tab-pane" data-pane="translate">
+                  <div class="ai-bar">
+                    <label>Traduire vers<select id="trTarget"></select></label>
+                    <button class="btn primary small" id="btnTranslate"><svg viewBox="0 0 24 24"><path d="m7 4 13 8-13 8V4Z"/></svg>Traduire</button>
+                    <div class="segmented small" id="trView" hidden>
+                      <button data-v="side" class="active">Côte à côte</button>
+                      <button data-v="only">Traduction seule</button>
+                    </div>
+                    <span class="ai-engine" id="trEngine"></span>
+                  </div>
+                  <div class="ai-progress" id="trProgress" hidden>
+                    <div class="progress"><i></i></div>
+                    <div class="progress-info"><span class="txt"></span><button class="btn ghost small danger" data-ai-cancel="translate">Annuler</button></div>
+                  </div>
+                  <div class="tr-list" id="trList"></div>
+                </div>
+
+                <div class="tab-pane" data-pane="summary">
+                  <div class="ai-bar">
+                    <label>Langue du résumé<select id="sumLang"></select></label>
+                    <label>Longueur<select id="sumLength"><option value="short">Court</option><option value="medium">Moyen</option><option value="long">Détaillé</option></select></label>
+                    <button class="btn primary small" id="btnSummarize"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15.5l-1.9-4.6L5.5 9l4.6-1.4z"/></svg>Générer</button>
+                    <span class="spacer"></span>
+                    <button class="btn small" id="sumCopy" hidden>Copier</button>
+                    <div class="dropdown"><button class="btn small" id="sumExport" hidden>Exporter ▾</button>
+                      <div class="menu" id="sumExportMenu" hidden><button data-sx="docx">Word (.docx)</button><button data-sx="pdf">PDF (.pdf)</button><button data-sx="md">Markdown (.md)</button></div></div>
+                  </div>
+                  <div class="ai-progress" id="sumProgress" hidden>
+                    <div class="progress"><i></i></div>
+                    <div class="progress-info"><span class="txt"></span><button class="btn ghost small danger" data-ai-cancel="summarize">Annuler</button></div>
+                  </div>
+                  <div class="summary" id="summaryOut"></div>
+                </div>
+
+                <div class="tab-pane" data-pane="transform">
+                  <div class="tf-formats" id="tfFormats"></div>
+                  <div class="ai-bar">
+                    <label>Langue<select id="tfLang"></select></label>
+                    <input type="text" id="tfCustom" class="tf-custom" placeholder="Décrivez ce que vous voulez (ex. : un résumé pour un enfant de 10 ans, une liste de citations…)" hidden>
+                    <button class="btn primary small" id="btnTransform"><svg viewBox="0 0 24 24"><path d="m7 4 13 8-13 8V4Z"/></svg>Générer</button>
+                    <span class="spacer"></span>
+                    <button class="btn small" id="tfEdit" hidden>Modifier</button>
+                    <button class="btn small" id="tfCopy" hidden>Copier</button>
+                    <div class="dropdown"><button class="btn small" id="tfExportBtn" hidden>Exporter ▾</button>
+                      <div class="menu" id="tfExportMenu" hidden><button data-tfx="docx">Word (.docx)</button><button data-tfx="pdf">PDF (.pdf)</button><button data-tfx="md">Markdown (.md)</button><button data-tfx="txt">Texte (.txt)</button><button data-tfx="html">Page HTML / Word (.html)</button></div></div>
+                  </div>
+                  <div class="ai-progress" id="tfProgress" hidden>
+                    <div class="progress"><i></i></div>
+                    <div class="progress-info"><span class="txt"></span><button class="btn ghost small danger" data-ai-cancel="transform">Annuler</button></div>
+                  </div>
+                  <div class="tf-out md" id="tfOut"></div>
+                  <textarea class="tf-editor" id="tfEditor" hidden spellcheck="true"></textarea>
+                </div>
+
+                <div class="tab-pane" data-pane="subs">
+                  <div class="sub-toolbar">
+                    <button class="btn small" id="sbSplit" title="Scinder le sous-titre sélectionné à la position de lecture (S)">✂ Scinder</button>
+                    <button class="btn small" id="sbMerge" title="Fusionner avec le suivant (M)">⇢ Fusionner</button>
+                    <button class="btn small" id="sbInsert" title="Insérer un sous-titre à la position de lecture (I)">＋ Insérer</button>
+                    <button class="btn small" id="sbDelete" title="Supprimer le sous-titre sélectionné (Suppr)">Supprimer</button>
+                    <span class="sep"></span>
+                    <button class="btn small" id="sbShift" title="Décaler tous les horodatages">⇄ Décaler…</button>
+                    <button class="btn small" id="sbAuto" title="Découper automatiquement les sous-titres trop longs">Découper les longs…</button>
+                    <span class="sep"></span>
+                    <button class="btn ghost small" id="sbUndo" title="Annuler (Ctrl+Z)">↶</button>
+                    <button class="btn ghost small" id="sbRedo" title="Rétablir (Ctrl+Y)">↷</button>
+                    <span class="spacer"></span>
+                    <label class="zoom">Zoom<input type="range" id="sbZoom" min="10" max="400" value="80"></label>
+                  </div>
+                  <div class="timeline-wrap" id="sbTimelineWrap"><canvas id="sbCanvas"></canvas></div>
+                  <div class="sub-issues" id="sbIssues"></div>
+                  <div class="cue-list" id="sbList"></div>
+                </div>
+
+                <div class="tab-pane" data-pane="stats">
+                  <div class="stats" id="statsOut"></div>
+                </div>
+                <div class="tab-pane" data-pane="origin">
+                  <div class="ai-progress" id="orProgress" hidden>
+                    <div class="progress"><i></i></div>
+                    <div class="progress-info"><span class="txt"></span><button class="btn ghost small danger" data-ai-cancel="aidetect">Annuler</button></div>
+                  </div>
+                  <div class="origin" id="originOut"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DICTÉE ============ -->
+      <section class="view" id="view-live">
+        <div class="live-wrap">
+          <div class="live-panel card">
+            <h2>Dictée en direct</h2>
+            <p class="muted">Parlez dans votre micro : chaque phrase est transcrite dès que vous faites une pause.</p>
+            <div class="opt-row">
+              <label>Micro<select id="liveMic"></select></label>
+              <label>Langue<select id="liveLang"></select></label>
+              <label>Modèle<select id="liveModel"></select></label>
+            </div>
+            <div class="mic-zone">
+              <button class="mic-btn" id="btnMic" title="Démarrer / arrêter (F9)">
+                <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+              </button>
+              <canvas id="liveViz" width="560" height="80"></canvas>
+              <div class="live-state" id="liveState">Prêt</div>
+              <div class="live-timer" id="liveTimer">00:00</div>
+            </div>
+          </div>
+          <div class="live-out card">
+            <div class="live-out-head">
+              <h4>Transcription</h4>
+              <div>
+                <button class="btn small" id="liveCopy">Copier</button>
+                <button class="btn small" id="liveOpen" disabled>Ouvrir dans l’éditeur</button>
+              </div>
+            </div>
+            <div class="live-text" id="liveText"><span class="muted">Le texte dicté apparaîtra ici…</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ TEXTES ============ -->
+      <section class="view" id="view-texts">
+        <div class="page-head">
+          <div><h2>Textes</h2><p class="muted">Importez n’importe quel fichier texte (cours rédigé, notes, article, polycopié, sous-titres…) pour le traduire, le résumer, le transformer (fiche de révision, quiz…), voir ses statistiques et l’interroger avec « Questions ».</p></div>
+          <div class="page-tools"><button class="btn primary small" id="txPick">+ Importer des fichiers</button></div>
+        </div>
+        <div class="dropzone tx-drop" id="txDrop" tabindex="0">
+          <svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M12 18v-6m0 0-2.5 2.5M12 12l2.5 2.5"/></svg>
+          <div><b>Glissez vos fichiers texte ici</b><br><span>Word (.docx), PDF, OpenDocument (.odt), texte (.txt, .md), page web (.html), RTF, sous-titres (.srt, .vtt)…</span></div>
+        </div>
+        <div class="tx-list" id="txList"></div>
+      </section>
+
+      <!-- ============ HISTORIQUE ============ -->
+      <section class="view" id="view-history">
+        <div class="lib-layout">
+          <aside class="lib-side" id="libSide"></aside>
+          <div class="lib-main">
+            <div class="page-head">
+              <h2 id="histTitle">Historique</h2>
+              <div class="page-tools">
+                <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="histSearch" placeholder="Rechercher dans les transcriptions…"></div>
+                <select id="histSort" title="Trier"><option value="date">Plus récentes</option><option value="old">Plus anciennes</option><option value="name">Nom</option><option value="duration">Durée</option></select>
+                <button class="btn ghost small danger" id="histClear">Tout effacer</button>
+              </div>
+            </div>
+            <div class="tiles hist-stats" id="histStats" hidden></div>
+            <div class="bulk" id="histBulk" hidden></div>
+            <div class="history-list" id="historyList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PROJETS ============ -->
+      <section class="view" id="view-projects">
+        <div id="projectsHome">
+          <div class="page-head">
+            <div><h2>Projets</h2><p class="muted">Regroupez plusieurs enregistrements (cours d’un semestre, réunions d’un même dossier, épisodes…) pour les résumer, les transformer et y chercher ensemble.</p></div>
+            <div class="page-tools"><button class="btn primary small" id="btnNewProject">+ Nouveau projet</button></div>
+          </div>
+          <div class="projects-grid" id="projectsGrid"></div>
+        </div>
+        <div id="projectDetail" hidden></div>
+      </section>
+
+      <!-- ============ QUESTIONS ============ -->
+      <section class="view" id="view-qa">
+        <div class="page-head">
+          <div><h2>Questions sur vos cours</h2><p class="muted">Posez une question : VoxForge cherche les passages qui en parlent dans toutes vos transcriptions et textes importés, puis l’IA rédige une réponse en citant ses sources (cliquez sur un numéro pour réécouter ou relire le passage).</p></div>
+        </div>
+        <div class="card qa-box">
+          <textarea id="qaInput" rows="2" placeholder="Ex. : Qu’est-ce que la règle des 3 C ? · Quelle différence entre comparaison horizontale et verticale ?"></textarea>
+          <div class="qa-bar">
+            <label>Chercher dans<select id="qaScope"><option value="">Tous vos cours</option><option value="audio">Transcriptions audio</option><option value="text">Textes importés</option></select></label>
+            <label>Réponse en<select id="qaLang"></select></label>
+            <span class="spacer"></span>
+            <span class="ai-engine" id="qaEngine"></span>
+            <button class="btn primary small" id="qaAsk"><svg viewBox="0 0 24 24"><path d="m7 4 13 8-13 8V4Z"/></svg>Demander</button>
+          </div>
+        </div>
+        <div class="ai-progress" id="qaProgress" hidden><div class="progress"><i></i></div><div class="progress-info"><span class="txt"></span><button class="btn ghost small danger" id="qaCancel">Annuler</button></div></div>
+        <div class="qa-out" id="qaOut"></div>
+      </section>
+
+      <!-- ============ MODÈLES ============ -->
+      <section class="view" id="view-models">
+        <div class="page-head">
+          <div>
+            <h2>Modèles de reconnaissance</h2>
+            <p class="muted">Modèles OpenAI Whisper (99 langues), exécutés localement. Plus le modèle est gros, plus il est précis… et lent.</p>
+          </div>
+          <div class="page-tools">
+            <button class="btn small" id="btnModelsDir">Ouvrir le dossier</button>
+          </div>
+        </div>
+        <div class="card pc-card" id="pcCard" hidden></div>
+        <div class="card gpu-card" id="gpuCard" hidden></div>
+        <div class="models-grid" id="modelsGrid"></div>
+        <p class="wer-note">« Mots faux » : mesuré par nos soins sur 2 enregistrements en français (une réunion, un exposé avec dates et noms propres), chacun en 3 versions : audio propre, bruit de fond, qualité téléphone. Sur un audio plus difficile (plusieurs personnes qui parlent en même temps, musique, fort accent), le taux peut être plus élevé.</p>
+
+        <div class="page-head sub">
+          <div>
+            <h2>Modèles IA <small class="muted">— résumé & traduction</small></h2>
+            <p class="muted">Modèles de langage exécutés sur votre PC (format GGUF). Les modèles déjà téléchargés dans LM Studio sont détectés automatiquement.</p>
+          </div>
+          <div class="page-tools">
+            <button class="btn small" id="btnLlmImport">Importer un .gguf…</button>
+          </div>
+        </div>
+        <div class="models-grid" id="llmGrid"></div>
+      </section>
+
+      <!-- ============ PARAMÈTRES ============ -->
+      <section class="view" id="view-settings">
+        <div class="page-head"><h2>Paramètres</h2></div>
+        <div class="settings">
+          <div class="card setting-group">
+            <h4>Apparence</h4>
+            <div class="setting"><div><b>Thème</b><small>Clair, sombre ou selon Windows</small></div>
+              <div class="segmented" id="setTheme"><button data-v="dark">Sombre</button><button data-v="light">Clair</button><button data-v="system">Système</button></div></div>
+            <div class="setting"><div><b>Couleur d’accent</b><small>Personnalisez l’interface</small></div>
+              <div class="swatches" id="setAccent"></div></div>
+          </div>
+          <div class="card setting-group">
+            <h4>Transcription</h4>
+            <div class="setting"><div><b>Cœurs processeur utilisés</b><small id="threadsHint">Plus = plus rapide, mais le PC est plus sollicité</small></div>
+              <div class="range-line"><input type="range" id="setThreads" min="1" max="16"><span id="setThreadsVal"></span></div></div>
+            <div class="setting"><div><b>Sensibilité de détection de voix</b><small>Baissez si des passages calmes sont ignorés ; montez si le bruit de fond est transcrit</small></div>
+              <div class="range-line"><input type="range" id="setVad" min="0.2" max="0.8" step="0.05"><span id="setVadVal"></span></div></div>
+            <div class="setting"><div><b>Filtrer les « hallucinations »</b><small>Supprime les phrases parasites typiques (« Merci d’avoir regardé », [Musique]…)</small></div>
+              <label class="switch"><input type="checkbox" id="setFilter"><i></i></label></div>
+            <div class="setting"><div><b>Supprimer les phrases répétées par erreur</b><small>Retire les passages que Whisper recopie par erreur quelques mots plus loin (en fin de bloc). Les répétitions volontaires d’un enseignant qui dicte sont conservées</small></div>
+              <label class="switch"><input type="checkbox" id="setEchoes" aria-label="Supprimer les phrases répétées par erreur"><i></i></label></div>
+            <div class="setting"><div><b>Enregistrer dans l’historique</b><small>Sauvegarde automatique de chaque transcription terminée</small></div>
+              <label class="switch"><input type="checkbox" id="setAutoSave"><i></i></label></div>
+            <div class="setting"><div><b>Revérifier les passages douteux (Parakeet)</b><small>Quand Parakeet bascule en anglais au milieu d’une phrase (noms propres étrangers…), le passage est retranscrit par Whisper. Recommandé : nettement moins d’erreurs, à peine plus lent</small></div>
+              <label class="switch"><input type="checkbox" id="setParakeetCheck" aria-label="Revérifier les passages douteux (Parakeet)"><i></i></label></div>
+            <div class="setting"><div><b>Précharger le modèle au démarrage</b><small>La première transcription démarre aussitôt. Utilise de la mémoire tant que VoxForge est ouvert (désactivé automatiquement si la mémoire libre manque)</small></div>
+              <label class="switch"><input type="checkbox" id="setPreload" aria-label="Précharger le modèle au démarrage"><i></i></label></div>
+          </div>
+          <div class="card setting-group">
+            <h4>Intelligence artificielle (résumé & traduction)</h4>
+            <div class="setting"><div><b>Moteur</b><small>Modèle intégré exécuté sur ce PC, ou serveur compatible OpenAI (LM Studio, Ollama, service en ligne…)</small></div>
+              <div class="segmented" id="setAiProvider"><button data-v="local">Intégré</button><button data-v="openai">Serveur / API</button></div></div>
+            <div class="setting" data-ai="local"><div><b>Modèle IA</b><small>Téléchargez-en un dans l’onglet « Modèles »</small></div>
+              <select id="setAiModel"></select></div>
+            <div class="setting" data-ai="local"><div><b>Utiliser la carte graphique</b><small>Accélère fortement l’IA (NVIDIA, AMD, Intel via Vulkan). Désactivez en cas de plantage.</small></div>
+              <label class="switch"><input type="checkbox" id="setAiGpu"><i></i></label></div>
+            <div class="setting" data-ai="local"><div><b>Rédaction en parallèle</b><small>Sur carte graphique, l’IA rédige jusqu’à 4 parties en même temps (résumé, fiche, nettoyage, traduction) : 2 à 3 fois plus rapide. Désactivez en cas de plantage ou de manque de mémoire.</small></div>
+              <label class="switch"><input type="checkbox" id="setAiParallel"><i></i></label></div>
+            <div class="setting" data-ai="openai"><div><b>Adresse du serveur</b><small>LM Studio : http://localhost:1234/v1 · Ollama : http://localhost:11434/v1</small></div>
+              <input type="text" id="setAiUrl" class="wide" spellcheck="false"></div>
+            <div class="setting" data-ai="openai"><div><b>Clé d’API</b><small>Facultative pour un serveur local · conservée dans un coffre chiffré par Windows, jamais affichée</small></div>
+              <input type="password" id="setAiKey" class="wide" spellcheck="false" placeholder="sk-…"></div>
+            <div class="setting" data-ai="openai"><div><b>Modèle</b><small id="setAiRemoteHint">Cliquez sur « Tester » pour lister les modèles du serveur</small></div>
+              <div class="inline"><select id="setAiRemoteModel"><option value="">(automatique)</option></select><button class="btn small" id="setAiTest">Tester</button></div></div>
+          </div>
+          <div class="card setting-group">
+            <h4>Dictionnaire personnalisé</h4>
+            <p class="muted small-p">Corrige automatiquement les mots mal reconnus (noms propres, jargon, pseudos) dans toutes les nouvelles transcriptions. Astuce : sélectionnez un mot dans une transcription puis clic droit › « Ajouter au dictionnaire ».</p>
+            <div class="dict" id="dictTable"></div>
+            <div class="dict-add">
+              <input type="text" id="dictFrom" placeholder="Mot reconnu (ex. la scène)">
+              <span>→</span>
+              <input type="text" id="dictTo" placeholder="Correction (ex. la Seine)">
+              <button class="btn small primary" id="dictAddBtn">Ajouter</button>
+              <span class="spacer"></span>
+              <button class="btn ghost small" id="dictImport">Importer…</button>
+              <button class="btn ghost small" id="dictExport">Exporter…</button>
+            </div>
+          </div>
+          <div class="card setting-group">
+            <h4>Vocabulaire du cours</h4>
+            <p class="muted small-p">Noms propres et termes techniques de vos cours (un par ligne). VoxForge corrige automatiquement leurs graphies « à l’oreille » dans les nouvelles transcriptions : <i>Saleï → Saleilles</i>, <i>Konstantin Echko → Constantinesco</i>. Chaque projet peut avoir en plus son propre vocabulaire (Projets › Vocabulaire). Pour une transcription déjà faite : bouton « Dictionnaire » de la transcription.</p>
+            <div class="vocab-edit">
+              <textarea id="vocabText" rows="7" spellcheck="false" placeholder="Saleilles&#10;Constantinesco&#10;Henry Sumner Maine&#10;macro-comparaison"></textarea>
+              <div class="vocab-packs" id="vocabPacks"></div>
+            </div>
+          </div>
+          <div class="card setting-group">
+            <h4>Stockage</h4>
+            <div class="setting"><div><b>Dossier des modèles</b><small id="setModelsDir"></small></div>
+              <button class="btn small" id="setModelsDirBtn">Changer…</button></div>
+          </div>
+          <div class="card setting-group">
+            <h4>Mises à jour</h4>
+            <div class="setting"><div><b>Rechercher au démarrage</b><small>Une version plus récente est proposée, jamais installée sans votre accord</small></div>
+              <label class="switch"><input type="checkbox" id="setMajDemarrage"><i></i></label></div>
+            <div class="setting"><div><b>État</b><small id="majStatut">—</small></div>
+              <button class="btn small" id="btnMajVerifier">Rechercher maintenant</button></div>
+          </div>
+          <div class="card setting-group about">
+            <h4>À propos</h4>
+            <p>VoxForge <span id="aboutVersion"></span> — transcription audio → texte 100 % locale. Moteur : OpenAI Whisper via sherpa-onnx (ONNX Runtime), découpage par VAD Silero, décodage ffmpeg.</p>
+            <p><button class="btn small" id="btnOpenLogs">Ouvrir le dossier des journaux</button> <small class="muted">utile en cas de problème</small></p>
+            <p class="muted">Raccourcis : <kbd>Ctrl</kbd>+<kbd>O</kbd> ouvrir · <kbd>Ctrl</kbd>+<kbd>Entrée</kbd> lancer · <kbd>Ctrl</kbd>+<kbd>Espace</kbd> lecture · <kbd>Ctrl</kbd>+<kbd>F</kbd> rechercher · <kbd>F9</kbd> dictée</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-back" id="modal" hidden><div class="modal card" role="dialog" aria-modal="true"><div class="modal-head"><h3 id="modalTitle"></h3><button class="x" id="modalClose" title="Fermer">✕</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
+  <div class="toasts" id="toasts"></div>
+  <div class="drag-overlay" id="dragOverlay" hidden><div>Déposez pour ajouter à la file</div></div>
+
+  <script src="languages.js"></script>
+  <script src="exporters.js"></script>
+  <script src="advisor.js"></script>
+  <script src="app.js"></script>
+  <script src="markdown.js"></script>
+  <script src="ai.js"></script>
+  <script src="library.js"></script>
+  <script src="../shared/dictionary.js"></script>
+  <div class="modal-back maj-back" id="majFenetre" hidden>
+    <div class="card modal" role="dialog" aria-modal="true" aria-labelledby="majTitre">
+      <div class="modal-head"><h3 id="majTitre">Mise à jour disponible</h3><button class="x" id="majFermer" title="Fermer">✕</button></div>
+      <div class="modal-body">
+        <p class="muted" id="majResume"></p>
+        <pre class="maj-notes" id="majNotes"></pre>
+        <div id="majProgression" hidden><div class="progress"><i id="majBarre"></i></div><p class="muted" id="majProgressionTexte"></p></div>
+        <p class="maj-erreur" id="majErreur" hidden></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost small" id="majIgnorer">Ignorer cette version</button>
+        <span class="spacer"></span>
+        <button class="btn small" id="majPlusTard">Plus tard</button>
+        <button class="btn primary small" id="majTelecharger">Télécharger et installer</button>
+        <button class="btn primary small" id="majInstaller" hidden>Redémarrer maintenant</button>
+      </div>
+    </div>
+  </div>
+  <script src="../shared/vocabulary.js"></script>
+  <script src="../shared/outline.js"></script>
+  <script src="../shared/aidetect.js"></script>
+  <script src="../shared/echoes.js"></script>
+  <script src="editor.js"></script>
+  <script src="study.js"></script>
+  <script src="maj.js"></script>
+</body>
+</html>
