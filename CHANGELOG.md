@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.7.1 — 7 octobre 2026
+### Nouveautés
+- Les mises à jour automatiques sont activées : les prochaines versions de VoxForge vous seront proposées au démarrage.
+- Nouveau `construire-setup.bat` : fabrique l'installeur en un seul fichier sur votre PC.
+
 ## 1.7.0 — 6 octobre 2026
 ### Nouveautés
 - Mises à jour automatiques : VoxForge recherche une nouvelle version au démarrage, vous la propose avec ses nouveautés, et ne télécharge rien sans votre accord. Le fichier est vérifié avant installation ; vous choisissez « Redémarrer maintenant » ou l'installation à la fermeture. Réglage dans Paramètres › Mises à jour.

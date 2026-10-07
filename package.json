@@ -1,6 +1,6 @@
 {
   "name": "voxforge",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Transcription audio vers texte, 99 langues, 100 % locale (Whisper)",
   "main": "src/main/main.js",
   "scripts": {
