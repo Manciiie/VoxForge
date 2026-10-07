@@ -16,19 +16,33 @@ rem Le moteur IA ne doit jamais tenter de se recompiler : les binaires Windows p
 set NODE_LLAMA_CPP_SKIP_DOWNLOAD=true
 set CSC_IDENTITY_AUTO_DISCOVERY=false
 
-echo  [1/3] Installation des dépendances - première fois : 5 à 10 minutes, environ 1 Go...
+echo  [1/4] Installation des dépendances - première fois : 5 à 10 minutes, environ 1 Go...
 call npm ci --no-audit --no-fund
 if errorlevel 1 call npm install --no-audit --no-fund
 if errorlevel 1 goto erreur
 echo.
 
-echo  [2/3] Préparation de ffmpeg...
+echo  [2/4] Préparation de ffmpeg...
 call node scripts\preparer-ffmpeg.js
 if errorlevel 1 goto erreur
 echo.
 
-echo  [3/3] Construction de VoxForge-Setup.exe...
-if defined FORGE_MAJ_JETON (echo  Jeton de mise à jour fourni : cette version saura se mettre à jour.) else (echo  Sans jeton FORGE_MAJ_JETON : cette version ne se mettra pas à jour toute seule.)
+echo  [3/4] Préparation des outils Windows d'electron-builder...
+call node scripts\preparer-wincodesign.js
+if errorlevel 1 goto erreur
+echo.
+
+rem Jeton de mise à jour : demandé une seule fois, puis conservé dans src\main\maj-config.json (exclu de GitHub)
+if defined FORGE_MAJ_JETON goto jetonok
+call node -e "try{process.exit(require('./src/main/maj-config.json').jeton?0:1)}catch{process.exit(1)}"
+if not errorlevel 1 goto jetonok
+echo  Aucun jeton de mise à jour enregistré. Colle ton jeton github_pat_... puis appuie sur Entrée.
+echo  Sans jeton, appuie simplement sur Entrée : l'installeur ne se mettra pas à jour tout seul.
+set /p FORGE_MAJ_JETON=  Jeton : 
+:jetonok
+echo.
+
+echo  [4/4] Construction de VoxForge-Setup.exe...
 call npm run build
 if errorlevel 1 goto erreur
 echo.
